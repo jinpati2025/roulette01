@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>掛け声単体再生テスト（動作確認済み）</title>
+</head>
+<body>
+  <h1>掛け声単体再生テスト</h1>
+  <button onclick="playVoice()">▶ 再生スタート</button>
+  <button onclick="stopVoice()">⏹ 停止</button>
+
+  <script>
+    // 動作確認済みのmp3ファイルを使用
+    const voiceUrl = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_25b5a81e69.mp3?filename=click-124467.mp3"; // Pixabayのクリック音
+
+    let currentAudio = null;
+
+    function playVoice() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      currentAudio = new Audio(voiceUrl);
+      currentAudio.volume = 1.0;
+      currentAudio.play().catch(err => {
+        console.error("再生エラー:", err);
+        alert("再生できませんでした：" + err.message);
+      });
+    }
+
+    function stopVoice() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+    }
+  </script>
+</body>
+</html>
