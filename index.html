@@ -2,58 +2,71 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>掛け声：連続再生テスト</title>
+  <title>ルーレット＋音声演出</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+    #roulette { font-size: 48px; margin: 50px 0; height: 60px; transition: transform 0.3s ease; }
+    .highlight { color: crimson; font-weight: bold; font-size: 1.5em; animation: shake 0.3s; }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+  </style>
 </head>
 <body>
-  <h1>掛け声：連続再生テスト</h1>
-  <button onclick="playVoiceSequence()">▶ 再生スタート</button>
-  <button onclick="stopVoice()">⏹ 停止</button>
+  <h1>ルーレット抽選</h1>
+  <div id="roulette">ここに名前が表示されます</div>
+  <button onclick="startRoulette()">スタート</button>
 
   <script>
-    const baseUrl = "https://jinpati2025.github.io/roulette01/";
+    const students = ["田中", "佐藤", "鈴木", "高橋", "伊藤"];
+    const soundFiles = [
+      "01_roll_basic.mp3.mp3",
+      "02_roll_impact.mp3.mp3",
+      "03_roll_shiden.mp3.mp3",
+      "04_fanfare_cheer.mp3.mp3",
+      "05_fanfare_pokupoku.mp3.mp3",
+      "06_voice_oujo.mp3.mp3",
+      "07_voice_doragon.mp3.mp3"
+    ];
 
-    const voiceParts = [
-      "saa_ikuze.mp3",
-      "kore_wa_kyouteki.mp3",
-      "tou1.mp3",
-      "amai1.mp3",
-      "tou2.mp3",
-      "amai2.mp3",
-      "guaaa_fanfare.mp3"
-    ].map(filename => baseUrl + filename);
+    let audio = null;
 
-    let currentAudio = null;
-    let currentIndex = 0;
-    let isPlaying = false;
-
-    function playVoiceSequence() {
-      if (isPlaying) return;
-      isPlaying = true;
-      currentIndex = 0;
-      playNext();
+    function getRandomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function playNext() {
-      if (!isPlaying || currentIndex >= voiceParts.length) return;
-      const audio = new Audio(voiceParts[currentIndex]);
-      currentAudio = audio;
-      audio.volume = 1.0;
+    function startRoulette() {
+      document.getElementById("roulette").textContent = "ルーレット中...";
+      document.getElementById("roulette").classList.remove("highlight");
+
+      const soundFile = getRandomItem(soundFiles);
+      audio = new Audio(soundFile);
+      audio.play();
+
       audio.onended = () => {
-        currentIndex++;
-        playNext();
+        const selected = getRandomItem(students);
+        document.getElementById("roulette").textContent = selected;
+        document.getElementById("roulette").classList.add("highlight");
+        triggerRandomEffect();
       };
-      audio.play().catch(err => {
-        console.error("再生エラー:", err);
-        alert("再生できませんでした：" + err.message);
-      });
     }
 
-    function stopVoice() {
-      isPlaying = false;
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-      }
+    function triggerRandomEffect() {
+      const effects = [
+        () => document.body.style.background = "#ffe",
+        () => document.body.style.background = "#eef",
+        () => document.getElementById("roulette").style.transform = "rotate(10deg)"
+      ];
+      const effect = getRandomItem(effects);
+      effect();
+      setTimeout(() => {
+        document.body.style.background = "#f4f4f4";
+        document.getElementById("roulette").style.transform = "rotate(0deg)";
+      }, 800);
     }
   </script>
 </body>
