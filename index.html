@@ -29,7 +29,7 @@
 
 <script>
 let studentsByClass = {};
-let currentClass = "J5a";
+let currentClass = "";
 let currentList = [];
 let allowDuplicates = false;
 let spinning = false;
@@ -37,7 +37,6 @@ let currentIndex = 0;
 let intervalId;
 let audio;
 
-// GitHub Pages 用 or ローカル用 URL 自動切替
 const isGitHub = location.hostname.includes("github.io");
 const baseUrl = isGitHub ? "https://jinpati2025.github.io/roulette01/" : "./";
 
@@ -109,12 +108,15 @@ function startRoulette(){
   }, speed);
 }
 
-// 名簿取得
 fetch("https://script.google.com/macros/s/AKfycbxgiJqg-mxOq-F4mdxYNoENdIX-75NdE1Dbi2wwqzDN1r4x2HxHAU_IQLiS3P92fXFD0Q/exec")
   .then(res => res.json())
   .then(data => {
     studentsByClass = data;
-    currentList = [...studentsByClass[currentClass] || []];
+    const keys = Object.keys(data);
+    if (keys.length > 0) {
+      currentClass = keys[0];
+      currentList = [...data[currentClass]];
+    }
     renderClassButtons();
   })
   .catch(err => {
