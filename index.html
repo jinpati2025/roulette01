@@ -28,13 +28,9 @@
 </div>
 
 <script>
-let studentsByClass = {
-  "J5a": ["アオイ", "ボブ", "ユミ"],
-  "J5b": ["ケン", "リサ", "オウ"],
-  "J5c": ["ミキ", "ジョン", "メイ"]
-};
+let studentsByClass = {};
 let currentClass = "J5a";
-let currentList = [...studentsByClass[currentClass]];
+let currentList = [];
 let allowDuplicates = false;
 let spinning = false;
 let currentIndex = 0;
@@ -113,7 +109,18 @@ function startRoulette(){
   }, speed);
 }
 
-renderClassButtons();
+// 名簿取得
+fetch("https://script.google.com/macros/s/AKfycbxgiJqg-mxOq-F4mdxYNoENdIX-75NdE1Dbi2wwqzDN1r4x2HxHAU_IQLiS3P92fXFD0Q/exec")
+  .then(res => res.json())
+  .then(data => {
+    studentsByClass = data;
+    currentList = [...studentsByClass[currentClass] || []];
+    renderClassButtons();
+  })
+  .catch(err => {
+    console.error("名簿取得失敗:", err);
+    alert("名簿が読み込めませんでした。ネットワークやアクセス設定を確認してください。");
+  });
 </script>
 </body>
 </html>
