@@ -83,8 +83,10 @@ function startRoulette(){
     alert('名簿がありません'); return;
   }
   spinning = true;
+
   const sound = soundFiles[Math.floor(Math.random() * soundFiles.length)];
   audio = new Audio(baseUrl + sound);
+  audio.loop = true;
   audio.play();
 
   let speed = 100, slow = 0;
@@ -100,6 +102,10 @@ function startRoulette(){
         document.getElementById('history').innerHTML += `<li>${selected}</li>`;
         if (!allowDuplicates){ currentList.splice(selIdx,1); }
         currentIndex = 0; spinning = false;
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
         document.getElementById("roulette").classList.add("highlight");
         setTimeout(() => document.getElementById("roulette").classList.remove("highlight"), 1000);
       }, 200);
