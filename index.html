@@ -38,6 +38,10 @@ let intervalId;
 let audio;
 
 const isGitHub = location.hostname.includes("github.io");
+const dataUrl = isGitHub
+  ? "https://jinpati2025.github.io/roulette01/students.json"
+  : "https://script.google.com/macros/s/AKfycbxgiJqg-mxOq-F4mdxYNoENdIX-75NdE1Dbi2wwqzDN1r4x2HxHAU_IQLiS3P92fXFD0Q/exec";
+
 const baseUrl = isGitHub ? "https://jinpati2025.github.io/roulette01/" : "./";
 
 const soundFiles = [
@@ -108,7 +112,7 @@ function startRoulette(){
   }, speed);
 }
 
-fetch("https://script.google.com/macros/s/AKfycbxgiJqg-mxOq-F4mdxYNoENdIX-75NdE1Dbi2wwqzDN1r4x2HxHAU_IQLiS3P92fXFD0Q/exec")
+fetch(dataUrl)
   .then(res => res.json())
   .then(data => {
     studentsByClass = data;
