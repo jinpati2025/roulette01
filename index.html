@@ -83,6 +83,12 @@ function startRoulette(){
   }
   spinning = true;
 
+  // ✅ ここで currentList をランダムにシャッフル
+  for (let i = currentList.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentList[i], currentList[j]] = [currentList[j], currentList[i]];
+  }
+
   const sound = soundFiles[Math.floor(Math.random() * soundFiles.length)];
   audio = new Audio(baseUrl + sound);
   audio.loop = true;
