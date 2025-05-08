@@ -20,6 +20,7 @@
 <h1>学生ルーレット + 効果音</h1>
 <div id="class-buttons" class="class-buttons"></div>
 <button id="toggle-duplicate" onclick="toggleDuplicate()">重複なし</button>
+<button onclick="window.open('https://docs.google.com/spreadsheets/d/1b76BPsMlb_WSWeAAEjKnDlz4TOf4OJZZA_RnXDSf4cA/edit', '_blank')">名簿を編集</button>
 <div id="roulette">ルーレット中...</div>
 <button onclick="startRoulette()">▶ スタート</button>
 <div class="history">
@@ -35,11 +36,12 @@ let spinning = false;
 let currentIndex = 0;
 let intervalId;
 let audio;
+let rollCount = 0;
 
 const isGitHub = location.hostname.includes("github.io");
 const dataUrl = isGitHub
-  ? "https://jinpati2025.github.io/roulette01/students.json"
-  : "https://script.google.com/macros/s/AKfycbzfuQZsdms87K0r_ZNB_nlbJAxkk5_lz3mXAc9J1KVBR0q0lfD9QFxfnCiMw2OOtA0JOw/exec";
+  ? "https://script.google.com/macros/s/AKfycbzfuQZsdms87K0r_ZNB_nlbJAxkk5_lz3mXAc9J1KVBR0q0lfD9QFxfnCiMw2OOtA0JOw/exec"
+  : "./students.json";
 
 const baseUrl = isGitHub ? "https://jinpati2025.github.io/roulette01/" : "./";
 
@@ -94,21 +96,49 @@ function startRoulette(){
     if (++slow > 35){
       clearInterval(intervalId);
       setTimeout(()=>{
-        const selIdx  = (currentIndex + currentList.length - 1) % currentList.length;
+        const selIdx = (currentIndex + currentList.length - 1) % currentList.length;
         const selected = currentList[selIdx];
         document.getElementById('roulette').textContent = selected;
         document.getElementById('history').innerHTML += `<li>${selected}</li>`;
         if (!allowDuplicates){ currentList.splice(selIdx,1); }
         currentIndex = 0; spinning = false;
         if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
+          audio.pause(); audio.currentTime = 0;
         }
-        document.getElementById("roulette").classList.add("highlight");
-        setTimeout(() => document.getElementById("roulette").classList.remove("highlight"), 1000);
+        const el = document.getElementById("roulette");
+        el.classList.add("highlight");
+
+        rollCount++;
+        if (rollCount % 5 === 0) applySpecialEffect(el);
+
+        setTimeout(() => el.classList.remove("highlight"), 1000);
       }, 200);
     }
   }, speed);
+}
+
+function applySpecialEffect(el) {
+  const effect = ["bounce", "explode", "burn"][(Math.floor(Math.random() * 3))];
+  if (effect === "explode") {
+    el.animate([
+      { transform: "scale(1)", opacity: 1 },
+      { transform: "scale(1.3)", opacity: 0 }
+    ], { duration: 500 });
+  } else if (effect === "burn") {
+    el.style.transition = "color 0.3s, background 0.3s";
+    el.style.background = "orange";
+    el.style.color = "white";
+    setTimeout(() => {
+      el.style.background = "";
+      el.style.color = "";
+    }, 500);
+  } else {
+    el.animate([
+      { transform: "translateY(0px)" },
+      { transform: "translateY(-10px)" },
+      { transform: "translateY(0px)" }
+    ], { duration: 300 });
+  }
 }
 
 fetch(dataUrl)
