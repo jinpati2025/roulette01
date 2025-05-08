@@ -14,7 +14,6 @@
       75% { transform: translateX(-5px); }
       100% { transform: translateX(0); }
     }
-    .class-buttons button { margin: 5px; padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
@@ -24,9 +23,9 @@
 <div id="roulette">ルーレット中...</div>
 <button onclick="startRoulette()">▶ スタート</button>
 <div class="history">
-  <h3>選ばれた学生:</h3>
-  <ul id="history"></ul>
+  <h3>選ばれた学生:</h3><ul id="history"></ul>
 </div>
+
 <script>
 let studentsByClass = {};
 let currentClass = "";
@@ -39,10 +38,11 @@ let audio;
 
 const isGitHub = location.hostname.includes("github.io");
 const dataUrl = isGitHub
-  ? "https://script.google.com/macros/s/AKfycbxgiJqg-mxOq-F4mdxYNoENdIX-75NdE1Dbi2wwqzDN1r4x2HxHAU_IQLiS3P92fXFD0Q/exec"
-  : "./students.json";
+  ? "https://jinpati2025.github.io/roulette01/students.json"
+  : "https://script.google.com/macros/s/AKfycbzfuQZsdms87K0r_ZNB_nlbJAxkk5_lz3mXAc9J1KVBR0q0lfD9QFxfnCiMw2OOtA0JOw/exec";
 
 const baseUrl = isGitHub ? "https://jinpati2025.github.io/roulette01/" : "./";
+
 const soundFiles = [
   "01_roll_basic.mp3",
   "02_roll_impact.mp3",
