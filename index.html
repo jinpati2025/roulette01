@@ -9,9 +9,15 @@ function startRoulette() {
   audio = new Audio(baseUrl + sound);
 
   audio.addEventListener('loadedmetadata', () => {
+    if (!currentList.length) {
+      alert('名簿が空です（クラスが選ばれていない可能性）');
+      spinning = false;
+      return;
+    }
+
     const duration = audio.duration; // 音声の長さ（秒）
     const totalSteps = 38; // 実質的な回転回数（フェイント除く）
-    const baseInterval = (duration * 1000) / (totalSteps + 2); // フェイント分も加味
+    const baseInterval = (duration * 1000) / (totalSteps + 2); // フェイント分含めた平均間隔
 
     audio.play();
 
@@ -19,15 +25,13 @@ function startRoulette() {
 
     const step = () => {
       if (spins >= totalSteps) {
-        // フェイント演出前に止まりかけてみせる
+        // フェイント：一度止まったように見せる
         setTimeout(() => {
-          // 一度「止まったように見せる」
           const fakeIdx = (currentIndex + currentList.length - 1) % currentList.length;
           document.getElementById('roulette').textContent = currentList[fakeIdx];
 
-          // そして…もう1回だけ！
+          // そしてもう1回だけ動く！
           setTimeout(() => {
-            // 最終選出
             const selIdx = (fakeIdx + 1) % currentList.length;
             const selected = currentList[selIdx];
             document.getElementById('roulette').textContent = selected;
@@ -45,31 +49,3 @@ function startRoulette() {
 
             const el = document.getElementById("roulette");
             el.classList.add("highlight");
-            rollCount++;
-            if (rollCount % 5 === 0) applySpecialEffect(el);
-            setTimeout(() => el.classList.remove("highlight"), 1000);
-          }, 600); // 騙し→本当の選出（0.6秒後）
-
-        }, 400); // 停止フェイント（0.4秒停止後）
-        return;
-      }
-
-      // 表示更新
-      document.getElementById('roulette').textContent = currentList[currentIndex];
-      currentIndex = (currentIndex + 1) % currentList.length;
-      spins++;
-
-      // 後半に向かって減速
-      let delay = baseInterval;
-      if (spins > totalSteps * 0.7) {
-        delay *= 1.6;
-      } else if (spins > totalSteps * 0.5) {
-        delay *= 1.3;
-      }
-
-      setTimeout(step, delay);
-    };
-
-    step();
-  });
-}
