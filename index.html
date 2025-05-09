@@ -3,6 +3,7 @@ function startRoulette() {
     alert('名簿がありません');
     return;
   }
+
   spinning = true;
 
   const sound = soundFiles[Math.floor(Math.random() * soundFiles.length)];
@@ -15,9 +16,9 @@ function startRoulette() {
       return;
     }
 
-    const duration = audio.duration; // 音声の長さ（秒）
-    const totalSteps = 38; // 実質的な回転回数（フェイント除く）
-    const baseInterval = (duration * 1000) / (totalSteps + 2); // フェイント分含めた平均間隔
+    const duration = audio.duration;
+    const totalSteps = 38;
+    const baseInterval = (duration * 1000) / (totalSteps + 2);
 
     audio.play();
 
@@ -25,20 +26,22 @@ function startRoulette() {
 
     const step = () => {
       if (spins >= totalSteps) {
-        // フェイント：一度止まったように見せる
+        // 騙しフェイント：一度止まって見せる
         setTimeout(() => {
           const fakeIdx = (currentIndex + currentList.length - 1) % currentList.length;
           document.getElementById('roulette').textContent = currentList[fakeIdx];
 
-          // そしてもう1回だけ動く！
+          // そしてもう一度だけ！
           setTimeout(() => {
             const selIdx = (fakeIdx + 1) % currentList.length;
             const selected = currentList[selIdx];
             document.getElementById('roulette').textContent = selected;
             document.getElementById('history').innerHTML += `<li>${selected}</li>`;
+
             if (!allowDuplicates) {
               currentList.splice(selIdx, 1);
             }
+
             currentIndex = 0;
             spinning = false;
 
@@ -49,3 +52,38 @@ function startRoulette() {
 
             const el = document.getElementById("roulette");
             el.classList.add("highlight");
+            rollCount++;
+
+            if (rollCount % 5 === 0) {
+              applySpecialEffect(el);
+            }
+
+            setTimeout(() => {
+              el.classList.remove("highlight");
+            }, 1000);
+
+          }, 600); // 騙し後の本選出
+        }, 400); // 騙しの止まり時間
+
+        return;
+      }
+
+      // 通常の回転処理
+      document.getElementById('roulette').textContent = currentList[currentIndex];
+      currentIndex = (currentIndex + 1) % currentList.length;
+      spins++;
+
+      // 後半で減速演出
+      let delay = baseInterval;
+      if (spins > totalSteps * 0.7) {
+        delay *= 1.6;
+      } else if (spins > totalSteps * 0.5) {
+        delay *= 1.3;
+      }
+
+      setTimeout(step, delay);
+    };
+
+    step(); // 回転スタート
+  });
+}
