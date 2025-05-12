@@ -38,7 +38,27 @@ let audio;
 let rollCount = 0;
 
 const isGitHub = location.hostname.includes("github.io");
-const dataUrl = "https://script.google.com/macros/s/AKfycbzfuQZsdms87K0r_ZNB_nlbJAxkk5_lz3mXAc9J1KVBR0q0lfD9QFxfnCiMw2OOtA0JOw/exec";
+const dataUrl = "https://script.google.com/macros/s/AKfycbwAbmT7vGHgW8oN4MZ_2NnJkkk5_lz3mXAc9J1KVBR0q0lfD9QxfmCiMw2OOtA0JOw/exec";
+console.log("名簿読み込み開始");
+fetch(dataUrl)
+  .then(res => {
+    console.log("レスポンス受信:", res);
+    return res.json();
+  })
+  .then(data => {
+    console.log("名簿データ取得成功:", data);
+    studentsByClass = data;
+    const keys = Object.keys(data);
+    if (keys.length > 0) {
+      currentClass = keys[0];
+      currentList = [...data[currentClass]];
+    }
+    renderClassButtons();
+  })
+  .catch(err => {
+    console.error("名簿取得失敗:", err);
+    alert("名簿が読み込めませんでした。ネットワークやアクセス設定を確認してください。");
+  });
 const baseUrl = isGitHub ? "https://jinpati2025.github.io/roulette01/" : "./";
 
 const soundFiles = [
@@ -154,15 +174,7 @@ function applySpecialEffect(el) {
   }
 }
 
-console.log("名簿読み込み開始");
 fetch(dataUrl)
-  .then(res => {
-    console.log("レスポンス受信:", res);
-    return res.json();
-  })
-  .then(data => {
-    console.log("名簿データ取得成功:", data);
-    studentsByClass = data;
   .then(res => res.json())
   .then(data => {
     studentsByClass = data;
@@ -174,7 +186,6 @@ fetch(dataUrl)
     renderClassButtons();
   })
   .catch(err => {
-    console.error("名簿取得失敗:", err);
     console.error("名簿取得失敗:", err);
     alert("名簿が読み込めませんでした。ネットワークやアクセス設定を確認してください。");
   });
