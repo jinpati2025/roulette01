@@ -14,6 +14,7 @@
       75% { transform: translateX(-5px); }
       100% { transform: translateX(0); }
     }
+    button{margin:4px;padding:4px 10px;}
   </style>
 </head>
 <body>
@@ -38,124 +39,115 @@ let audio;
 let rollCount = 0;
 
 const isGitHub = location.hostname.includes("github.io");
-const dataUrl = "https://script.google.com/macros/s/AKfycbzTinYbs72R3H8XdpE0eAu6PEHv0Zi6Caq8eB82sGpc8DZR1GdPuBVQ_gblw1nwykD7dw/exec";
-
+const dataUrl = "https://script.google.com/macros/s/AKfycbw1v0ln2W7bWP7bXJESTL6g2cDeEnjb22asbVmvsOLDl8mx5prF0XKbIJTcnY/exec";
 const baseUrl = isGitHub ? "https://jinpati2025.github.io/roulette01/" : "./";
 
+/* --- 名簿データ取得してクラスボタン生成 --- */
+fetch(dataUrl)
+  .then(res => res.json())
+  .then(data => {
+    console.log("名簿取得成功:", data);
+    studentsByClass = data;
+    const keys = Object.keys(data);
+    if(keys.length){
+      currentClass = keys[0];
+      currentList  = [...data[currentClass]];
+    }
+    renderClassButtons();
+  })
+  .catch(err=>{
+    console.error("名簿取得失敗:",err);
+    alert("名簿が読み込めませんでした。GASの公開設定やURLを確認してください。");
+  });
+
 const soundFiles = [
-  "01_roll_basic.mp3",
-  "02_roll_impact.mp3",
-  "03_roll_shiden.mp3",
-  "04_fanfare_cheer.mp3",
-  "05_fanfare_pokupoku.mp3",
-  "06_voice_oujo.mp3",
-  "07_voice_doragon.mp3"
+  "01_roll_basic.mp3","02_roll_impact.mp3","03_roll_shiden.mp3",
+  "04_fanfare_cheer.mp3","05_fanfare_pokupoku.mp3",
+  "06_voice_oujo.mp3","07_voice_doragon.mp3"
 ];
 
-function toggleDuplicate() {
-  allowDuplicates = !allowDuplicates;
-  document.getElementById("toggle-duplicate").textContent = allowDuplicates ? "重複あり" : "重複なし";
+function toggleDuplicate(){
+  allowDuplicates=!allowDuplicates;
+  document.getElementById("toggle-duplicate").textContent=allowDuplicates?"重複あり":"重複なし";
 }
 
-function renderClassButtons() {
-  const box = document.getElementById('class-buttons');
-  box.innerHTML = '';
-  Object.keys(studentsByClass).forEach(k => {
-    const btn = document.createElement('button');
-    btn.textContent = k;
-    btn.onclick = () => selectClass(k);
+function renderClassButtons(){
+  const box=document.getElementById("class-buttons");
+  box.innerHTML="";
+  Object.keys(studentsByClass).forEach(k=>{
+    const btn=document.createElement("button");
+    btn.textContent=k;
+    btn.onclick=()=>selectClass(k);
     box.appendChild(btn);
   });
 }
 
 function selectClass(k){
-  currentClass = k;
-  currentList = [...studentsByClass[k] || []];
-  document.getElementById('history').innerHTML = '';
-  document.getElementById('roulette').textContent = '名前がここに表示されます';
+  currentClass=k;
+  currentList=[...studentsByClass[k]||[]];
+  document.getElementById("history").innerHTML="";
+  document.getElementById("roulette").textContent="名前がここに表示されます";
 }
 
-function startRoulette() {
-  if (spinning || !currentList.length) {
-    alert('名簿がありません');
-    return;
-  }
+function startRoulette(){
+  if(spinning||!currentList.length){alert("名簿がありません");return;}
+  spinning=true;
 
-  spinning = true;
-  const sound = soundFiles[Math.floor(Math.random() * soundFiles.length)];
-  audio = new Audio(baseUrl + sound);
+  const sound=soundFiles[Math.floor(Math.random()*soundFiles.length)];
+  audio=new Audio(baseUrl+sound);
 
-  audio.addEventListener('loadedmetadata', () => {
-    if (!currentList.length) {
-      alert('名簿が空です（クラスが選ばれていない可能性）');
-      spinning = false;
-      return;
-    }
+  audio.addEventListener("loadedmetadata",()=>{
+    if(!currentList.length){alert("名簿が空です");spinning=false;return;}
 
-    const duration = audio.duration;
-    const totalSteps = 38;
-    const baseInterval = (duration * 1000) / (totalSteps + 2);
+    const duration=audio.duration;
+    const totalSteps=38;
+    const baseInterval=(duration*1000)/(totalSteps+2);
     audio.play();
 
-    let spins = 0;
-
-    const step = () => {
-      if (spins >= totalSteps) {
-        setTimeout(() => {
-          const fakeIdx = (currentIndex + currentList.length - 1) % currentList.length;
-          document.getElementById('roulette').textContent = currentList[fakeIdx];
-
-          setTimeout(() => {
-            const selIdx = (fakeIdx + 1) % currentList.length;
-            const selected = currentList[selIdx];
-            document.getElementById('roulette').textContent = selected;
-            document.getElementById('history').innerHTML += `<li>${selected}</li>`;
-            if (!allowDuplicates) currentList.splice(selIdx, 1);
-            currentIndex = 0;
-            spinning = false;
-            if (audio) { audio.pause(); audio.currentTime = 0; }
-            const el = document.getElementById("roulette");
+    let spins=0;
+    const step=()=>{
+      if(spins>=totalSteps){
+        setTimeout(()=>{
+          const fakeIdx=(currentIndex+currentList.length-1)%currentList.length;
+          document.getElementById("roulette").textContent=currentList[fakeIdx];
+          setTimeout(()=>{
+            const selIdx=(fakeIdx+1)%currentList.length;
+            const selected=currentList[selIdx];
+            document.getElementById("roulette").textContent=selected;
+            document.getElementById("history").innerHTML+=`<li>${selected}</li>`;
+            if(!allowDuplicates) currentList.splice(selIdx,1);
+            currentIndex=0; spinning=false;
+            if(audio){audio.pause();audio.currentTime=0;}
+            const el=document.getElementById("roulette");
             el.classList.add("highlight");
-            rollCount++;
-            if (rollCount % 5 === 0) applySpecialEffect(el);
-            setTimeout(() => el.classList.remove("highlight"), 1000);
-          }, 600);
-        }, 400);
-        return;
+            rollCount++; if(rollCount%5===0) applySpecialEffect(el);
+            setTimeout(()=>el.classList.remove("highlight"),1000);
+          },600);
+        },400); return;
       }
-
-      document.getElementById('roulette').textContent = currentList[currentIndex];
-      currentIndex = (currentIndex + 1) % currentList.length;
-      spins++;
-
-      let delay = baseInterval;
-      if (spins > totalSteps * 0.7) delay *= 1.6;
-      else if (spins > totalSteps * 0.5) delay *= 1.3;
-      setTimeout(step, delay);
+      document.getElementById("roulette").textContent=currentList[currentIndex];
+      currentIndex=(currentIndex+1)%currentList.length; spins++;
+      let delay=baseInterval;
+      if(spins>totalSteps*0.7) delay*=1.6;
+      else if(spins>totalSteps*0.5) delay*=1.3;
+      setTimeout(step,delay);
     };
-
     step();
   });
 }
 
-function applySpecialEffect(el) {
-  const effect = ["bounce", "explode", "burn"][(Math.floor(Math.random() * 3))];
-  if (effect === "explode") {
-    el.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(1.3)", opacity: 0 }], { duration: 500 });
-  } else if (effect === "burn") {
-    el.style.transition = "color 0.3s, background 0.3s";
-    el.style.background = "orange";
-    el.style.color = "white";
-    setTimeout(() => {
-      el.style.background = "";
-      el.style.color = "";
-    }, 500);
-  } else {
-    el.animate([{ transform: "translateY(0px)" }, { transform: "translateY(-10px)" }, { transform: "translateY(0px)" }], { duration: 300 });
+function applySpecialEffect(el){
+  const effect=["bounce","explode","burn"][Math.floor(Math.random()*3)];
+  if(effect==="explode"){
+    el.animate([{transform:"scale(1)",opacity:1},{transform:"scale(1.3)",opacity:0}],{duration:500});
+  }else if(effect==="burn"){
+    el.style.transition="color .3s, background .3s";
+    el.style.background="orange"; el.style.color="white";
+    setTimeout(()=>{el.style.background=""; el.style.color="";},500);
+  }else{ // bounce
+    el.animate([{transform:"translateY(0px)"},{transform:"translateY(-10px)"},{transform:"translateY(0px)"}],{duration:300});
   }
 }
-
-
 </script>
 </body>
 </html>
