@@ -138,7 +138,7 @@ function startRoulette(){
 
     // ★回転の調整
     const totalSteps = 40;   // 少し多めに回す
-    const spinTime   = 1.8;  // 約1.8秒回転
+    const spinTime   = 2.7;  // ★約2.7秒回転（以前の 1.8秒 の約1.5倍）
 
     const baseInterval = (spinTime * 1000) / (totalSteps + 2);
 
@@ -151,7 +151,7 @@ function startRoulette(){
         // 回転終了 → 少し「間」を置いてから結果演出へ
         setTimeout(() => {
           runResultSequence(finalIndex);
-        }, 250);
+        }, 1200);  // ★ 250ms → 約1.2秒待ってから演出開始
         return;
       }
 
@@ -281,8 +281,7 @@ function playNormalFinish(el, selIdx){
   }, 250);
 }
 
-/* ★B が A を弾き飛ばして勝つパターン
-   ばねでタメて 2回小競り合い → 3回目で A が右にクルクル吹っ飛ぶ */
+/* ★B が A を弾き飛ばして勝つパターン */
 function playAttackFinish(el, prevIdx, finalIdx){
   const nameA = currentList[prevIdx];    // ほぼ当たりだった前の人（負け役）
   const nameB = currentList[finalIdx];   // 本当の当たり（勝ち役）
@@ -300,10 +299,10 @@ function playAttackFinish(el, prevIdx, finalIdx){
     el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(-110px) scale(0.9)",  opacity:0.7 }, // タメ
-        { transform:"translateX(   0px) scale(1.18)", opacity:1.0 }, // 突進
-        { transform:"translateX(  35px) scale(0.96)", opacity:1.0 }, // 押し込み
-        { transform:"translateX(   0px) scale(1.0)",  opacity:1.0 }  // 戻る
+        { transform:"translateX(-110px) scale(0.9)",  opacity:0.7 },
+        { transform:"translateX(   0px) scale(1.18)", opacity:1.0 },
+        { transform:"translateX(  35px) scale(0.96)", opacity:1.0 },
+        { transform:"translateX(   0px) scale(1.0)",  opacity:1.0 }
       ],
       { duration:380, easing:"ease-in-out" }
     );
@@ -343,7 +342,7 @@ function playAttackFinish(el, prevIdx, finalIdx){
     );
 
     setTimeout(() => {
-      // A が右にクルクル吹っ飛ぶ（かなり外まで）
+      // A が右にクルクル吹っ飛ぶ
       el.textContent = nameA;
       el.animate(
         [
@@ -372,8 +371,7 @@ function playAttackFinish(el, prevIdx, finalIdx){
   }
 }
 
-/* ★B が攻めてくるが A がはじき返して勝つパターン
-   ばねでタメて 2回小競り合い → 3回目で B が左にクルクル吹っ飛ぶ */
+/* ★B が攻めてくるが A がはじき返して勝つパターン */
 function playCounterFinish(el, prevIdx, finalIdx){
   const nameA = currentList[prevIdx];    // 勝者（前の人）
   const nameB = currentList[finalIdx];   // 攻めてくる次の人（負け役）
@@ -387,7 +385,7 @@ function playCounterFinish(el, prevIdx, finalIdx){
       return;
     }
 
-    // ★B が右からバネのように突進（横幅広め）
+    // ★B が右からバネのように突進
     el.textContent = nameB;
     el.animate(
       [
@@ -400,7 +398,7 @@ function playCounterFinish(el, prevIdx, finalIdx){
     );
 
     setTimeout(() => {
-      // ★A がぐっと踏ん張る（横ブレ大きめ）
+      // ★A がぐっと踏ん張る
       el.textContent = nameA;
       el.animate(
         [
@@ -427,14 +425,14 @@ function playCounterFinish(el, prevIdx, finalIdx){
       [
         { transform:"translateX(-150px) scale(0.9)",   opacity:0.6 },
         { transform:"translateX(    0px) scale(1.25)", opacity:1.0 },
-        { transform:"translateX(-70px) scale(1.05)",   opacity:1.0 },
+        { transform:"translateX(-70px)  scale(1.05)",  opacity:1.0 },
         { transform:"translateX(    0px) scale(1.0)",  opacity:1.0 }
       ],
       { duration:420, easing:"ease-out" }
     );
 
     setTimeout(() => {
-      // B が左にクルクル吹っ飛ぶ（弾き飛ばすと反対側）
+      // B が左にクルクル吹っ飛ぶ
       el.textContent = nameB;
       el.animate(
         [
