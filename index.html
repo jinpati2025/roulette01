@@ -187,18 +187,9 @@ function runResultSequence(finalIndex){
   const nameA   = currentList[prevIdx];
   const nameB   = currentList[finalIndex];
 
-  // デフォルトは直球
-  let mode = "normal";
+  // ★テスト用：毎回「弾き飛ばす」モードに固定
+  let mode = "attack";
 
-  if (len >= 2) {
-    const r = Math.random();
-    // 10%：はじき返す、20%：弾き飛ばす、残りは直球
-    if (r < 0.10) {
-      mode = "counter"; // A が勝つ
-    } else if (r < 0.30) {
-      mode = "attack";  // B が勝つ（A を弾き飛ばす）
-    }
-  }
 
   // まずは 3パターン共通の導入演出（A → B）
   playIntro(el, nameA, nameB, () => {
