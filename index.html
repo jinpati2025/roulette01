@@ -240,7 +240,7 @@ function playIntro(el, nameA, nameB, done){
       { transform:"scale(1.25)" },
       { transform:"scale(1)"   }
     ],
-    { duration:400, easing:"ease-out" }
+    { duration:350, easing:"ease-out" }
   );
 
   setTimeout(() => {
@@ -252,10 +252,10 @@ function playIntro(el, nameA, nameB, done){
         { transform:"scale(1.2)" },
         { transform:"scale(1)"   }
       ],
-      { duration:400, easing:"ease-out" }
+      { duration:350, easing:"ease-out" }
     );
-    setTimeout(done, 420);
-  }, 420);
+    setTimeout(done, 360);
+  }, 360);
 }
 
 /* ★直球パターンの決定演出（軽い演出をここに集約） */
@@ -277,173 +277,118 @@ function playNormalFinish(el, selIdx){
   }, 310);
 }
 
-/* ★B が A を弾き飛ばして勝つパターン（小競り合い＋右にクルクル） */
+/* ★B が A を弾き飛ばして勝つパターン（シンプル版） */
 function playAttackFinish(el, prevIdx, finalIdx){
   const nameA = currentList[prevIdx];    // ほぼ当たりだった前の人
   const nameB = currentList[finalIdx];   // 本当の当たり（次の人）
 
-  let round = 0;
+  // ① A が決まりかけて光る
+  el.textContent = nameA;
+  el.animate(
+    [
+      { transform:"scale(1)"   },
+      { transform:"scale(1.25)"},
+      { transform:"scale(1)"   }
+    ],
+    { duration:350, easing:"ease-out" }
+  );
 
-  // 小競り合い：A と B がゆっくり押し合う（2セット）
-  const clash = () => {
-    if (round >= 2) {
-      flyOut();   // 小競り合い終了 → A を吹っ飛ばす
-      return;
-    }
-
-    // A が押し負けそうになる
-    el.textContent = nameA;
+  setTimeout(() => {
+    // ② B が左から乱入してくる
+    el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(0)" },
-        { transform:"translateX(40px)" },
-        { transform:"translateX(20px)" },
-        { transform:"translateX(0)" }
+        { transform:"translateX(-60px)", opacity:0.2 },
+        { transform:"translateX(0)",     opacity:1   }
       ],
-      { duration:420, easing:"ease-in-out" }
+      { duration:350, easing:"ease-out" }
     );
 
     setTimeout(() => {
-      // B が左から押し返す
-      el.textContent = nameB;
+      // ③ A が右にクルクル飛んでいく
+      el.textContent = nameA;
       el.animate(
         [
-          { transform:"translateX(-40px)" },
-          { transform:"translateX(0)"     },
-          { transform:"translateX(-10px)" },
-          { transform:"translateX(0)"     }
+          { transform:"translateX(0) rotate(0deg)   scale(1)",   opacity:1 },
+          { transform:"translateX(360px) rotate(720deg) scale(0.4)", opacity:0 }
         ],
-        { duration:420, easing:"ease-in-out" }
-      );
-
-      round++;
-      setTimeout(clash, 440);
-    }, 440);
-  };
-
-  clash();
-
-  function flyOut(){
-    // A を画面右の外へクルクル飛ばす
-    el.textContent = nameA;
-    el.animate(
-      [
-        { transform:"translateX(0) rotate(0deg)   scale(1)",   opacity:1 },
-        { transform:"translateX(320px) rotate(720deg) scale(0.5)", opacity:0 }
-      ],
-      { duration:700, easing:"ease-in" }
-    );
-
-    setTimeout(() => {
-      // B が左から戻ってきて中央にドン
-      el.textContent = nameB;
-      el.animate(
-        [
-          { transform:"translateX(-260px) scale(1.2)", opacity:0 },
-          { transform:"translateX(0)      scale(1.0)", opacity:1 }
-        ],
-        { duration:520, easing:"ease-out" }
+        { duration:650, easing:"ease-in" }
       );
 
       setTimeout(() => {
+        // ④ B が中央にドンと残る
+        el.textContent = nameB;
         el.animate(
           [
-            { transform:"scale(1)"   },
-            { transform:"scale(1.3)" },
-            { transform:"scale(1)"   }
+            { transform:"translateX(-80px) scale(1.1)", opacity:0 },
+            { transform:"translateX(0)     scale(1.0)", opacity:1 }
           ],
-          { duration:360, easing:"ease-out" }
+          { duration:450, easing:"ease-out" }
         );
+
         setTimeout(() => {
           finishSelection(finalIdx, "special");
-        }, 380);
-      }, 540);
-    }, 720);
-  }
+        }, 460);
+      }, 660);
+    }, 380);
+  }, 380);
 }
 
-/* ★B が攻めてくるが A がはじき返して勝つパターン（小競り合い＋左にクルクル） */
+/* ★B が攻めてくるが A がはじき返すパターン（シンプル版） */
 function playCounterFinish(el, prevIdx, finalIdx){
   const nameA = currentList[prevIdx];    // 勝者（前の人）
   const nameB = currentList[finalIdx];   // 攻めてくる次の人
 
-  let round = 0;
+  // ① B が右から乱入してきて当たりそうに見える
+  el.textContent = nameB;
+  el.animate(
+    [
+      { transform:"translateX(60px) scale(1)", opacity:0.2 },
+      { transform:"translateX(0)    scale(1.2)", opacity:1   },
+      { transform:"translateX(0)    scale(1.0)", opacity:1   }
+    ],
+    { duration:550, easing:"ease-out" }
+  );
 
-  const clash = () => {
-    if (round >= 2) {
-      flyOut();
-      return;
-    }
-
-    // B が右から攻めてくる
-    el.textContent = nameB;
+  setTimeout(() => {
+    // ② A が登場して押し返す感じ
+    el.textContent = nameA;
     el.animate(
       [
-        { transform:"translateX(40px)" },
-        { transform:"translateX(0)"    },
-        { transform:"translateX(15px)" },
-        { transform:"translateX(0)"    }
+        { transform:"translateX(-40px)", opacity:0.2 },
+        { transform:"translateX(0)",     opacity:1   }
       ],
-      { duration:420, easing:"ease-in-out" }
+      { duration:400, easing:"ease-out" }
     );
 
     setTimeout(() => {
-      // A が左から押し返す
-      el.textContent = nameA;
+      // ③ B が左にクルクル飛んでいく
+      el.textContent = nameB;
       el.animate(
         [
-          { transform:"translateX(-40px)" },
-          { transform:"translateX(0)"     },
-          { transform:"translateX(-15px)" },
-          { transform:"translateX(0)"     }
+          { transform:"translateX(0) rotate(0deg)      scale(1)",   opacity:1 },
+          { transform:"translateX(-360px) rotate(-720deg) scale(0.4)", opacity:0 }
         ],
-        { duration:420, easing:"ease-in-out" }
-      );
-
-      round++;
-      setTimeout(clash, 440);
-    }, 440);
-  };
-
-  clash();
-
-  function flyOut(){
-    // B を画面左の外にクルクル飛ばす
-    el.textContent = nameB;
-    el.animate(
-      [
-        { transform:"translateX(0) rotate(0deg)      scale(1)",   opacity:1 },
-        { transform:"translateX(-320px) rotate(-720deg) scale(0.5)", opacity:0 }
-      ],
-      { duration:700, easing:"ease-in" }
-    );
-
-    setTimeout(() => {
-      // A が右から戻ってきて中央にドン
-      el.textContent = nameA;
-      el.animate(
-        [
-          { transform:"translateX(260px) scale(1.2)", opacity:0 },
-          { transform:"translateX(0)    scale(1.0)",  opacity:1 }
-        ],
-        { duration:520, easing:"ease-out" }
+        { duration:650, easing:"ease-in" }
       );
 
       setTimeout(() => {
+        // ④ A が中央でドヤッと残る
+        el.textContent = nameA;
         el.animate(
           [
-            { transform:"scale(1)"   },
-            { transform:"scale(1.3)" },
-            { transform:"scale(1)"   }
+            { transform:"translateX(80px) scale(1.1)", opacity:0 },
+            { transform:"translateX(0)    scale(1.0)", opacity:1 }
           ],
-          { duration:360, easing:"ease-out" }
+          { duration:450, easing:"ease-out" }
         );
+
         setTimeout(() => {
           finishSelection(prevIdx, "special");
-        }, 380);
-      }, 540);
-    }, 720);
-  }
+        }, 460);
+      }, 660);
+    }, 420);
+  }, 560);
 }
 
 /* ★確定後の共通処理（履歴、音止め、軽い演出など） */
