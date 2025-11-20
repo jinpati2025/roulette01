@@ -51,12 +51,9 @@ let currentIndex = 0;
 let audio;
 let rollCount = 0;
 
-// ★モード設定
-// "attack"  : 毎回「弾き飛ばす」だけ（テスト用）
-// "counter" : 毎回「はじき返す」だけ（テスト用）
-// "straight": 毎回「直球」         （テスト用）
-// "random"  : 通常運用（直球70％・弾き飛ばす20％・はじき返す10％）
-const TEST_MODE = "random";   // 本番はここを "random" にしておく
+// ★テスト用：ここに "attack" / "counter" / "straight" を入れるとその演出だけになる
+// 本番は null のまま（完全ランダム）
+const FORCE_MODE = null;
 
 const isGitHub = location.hostname.includes("github.io");
 const dataUrl =
@@ -195,23 +192,25 @@ function runResultSequence(finalIndex){
   // モード決定
   let mode = "normal";
 
-  if (TEST_MODE === "attack" || TEST_MODE === "counter" || TEST_MODE === "straight") {
-    if (TEST_MODE === "straight") {
+  if (FORCE_MODE) {
+    // テスト用：強制モード
+    if (FORCE_MODE === "straight") {
       mode = "normal";
-    } else {
-      mode = TEST_MODE;
+    } else if (FORCE_MODE === "attack") {
+      mode = "attack";
+    } else if (FORCE_MODE === "counter") {
+      mode = "counter";
     }
   } else {
-    // random モード
+    // ランダム運用（70% 直球、20% 弾き飛ばす、10% はじき返す）
     if (len >= 2) {
       const r = Math.random();
-      // 10%：はじき返す、20%：弾き飛ばす、残りは直球
       if (r < 0.10) {
-        mode = "counter";
+        mode = "counter";  // 10%
       } else if (r < 0.30) {
-        mode = "attack";
+        mode = "attack";   // 次の 20%
       } else {
-        mode = "normal";
+        mode = "normal";   // 残り 70%
       }
     }
   }
