@@ -135,10 +135,8 @@ function startRoulette(){
     const duration   = audio.duration;
     const totalSteps = 38;
 
-    // ★ここで「どれくらい回すか」を調整
-    //   元は duration をそのまま使っていたので、1秒くらい短くしたい → duration - 1
-    //   （最低でも 1.5 秒は回るようにしておく）
-    const spinTime   = Math.max(duration - 1, 1.5);
+    // ★回転時間（少し短め）
+    const spinTime     = Math.max(duration - 1, 1.5);
     const baseInterval = (spinTime * 1000) / (totalSteps + 2);
 
     audio.play();
@@ -147,44 +145,10 @@ function startRoulette(){
 
     const step = () => {
       if (spins >= totalSteps) {
-        // 最後の「ガクッ」を演出
+        // 回転終了 → 結果演出へ
         setTimeout(() => {
-          const fakeIdx =
-            (currentIndex + currentList.length - 1) % currentList.length;
-          document.getElementById("roulette").textContent =
-            currentList[fakeIdx];
-
-          setTimeout(() => {
-            // ★最終的に選ぶのは finalIndex
-            const selIdx   = finalIndex;
-            const selected = currentList[selIdx];
-
-            document.getElementById("roulette").textContent = selected;
-            document.getElementById("history").innerHTML +=
-              `<li>${selected}</li>`;
-
-            if (!allowDuplicates) {
-              // 選ばれた人をリストから削除（重複なし）
-              currentList.splice(selIdx, 1);
-            }
-
-            currentIndex = 0;
-            spinning = false;
-
-            if (audio) {
-              audio.pause();
-              audio.currentTime = 0;
-            }
-
-            const el = document.getElementById("roulette");
-            el.classList.add("highlight");
-            rollCount++;
-            if (rollCount % 5 === 0) {
-              applySpecialEffect(el);
-            }
-            setTimeout(() => el.classList.remove("highlight"), 1000);
-          }, 600);
-        }, 400);
+          runResultSequence(finalIndex);
+        }, 200);
         return;
       }
 
@@ -208,7 +172,247 @@ function startRoulette(){
   });
 }
 
-/* 追加のちょっとした演出 */
+/* ★結果演出の分岐（直球／弾き飛ばす／はじき返す） */
+function runResultSequence(finalIndex){
+  const el  = document.getElementById("roulette");
+  const len = currentList.length;
+
+  if (!len) {
+    finishSelection(finalIndex, "normal");
+    return;
+  }
+
+  // 前の人（A）と当たりの人（B）を決定
+  const prevIdx = (finalIndex - 1 + len) % len;  // 前の人
+  const nameA   = currentList[prevIdx];
+  const nameB   = currentList[finalIndex];
+
+  // デフォルトは直球
+  let mode = "normal";
+
+  if (len >= 2) {
+    const r = Math.random();
+    // 10%：はじき返す、20%：弾き飛ばす、残りは直球
+    if (r < 0.10) {
+      mode = "counter"; // A が勝つ
+    } else if (r < 0.30) {
+      mode = "attack";  // B が勝つ（A を弾き飛ばす）
+    }
+  }
+
+  // まずは 3パターン共通の導入演出（A → B）
+  playIntro(el, nameA, nameB, () => {
+    if (mode === "normal" || len < 2) {
+      // 直球パターン
+      playNormalFinish(el, finalIndex);
+    } else if (mode === "attack") {
+      // 前の人 A を弾き飛ばして B が勝つ
+      playAttackFinish(el, prevIdx, finalIndex);
+    } else { // counter
+      // B が攻めてくるが、A がはじき返す
+      playCounterFinish(el, prevIdx, finalIndex);
+    }
+  });
+}
+
+/* ★導入演出（Aで決まりかけ → Bも候補に見える） */
+function playIntro(el, nameA, nameB, done){
+  // ① A が一瞬「当たりっぽく」光る
+  el.textContent = nameA;
+  el.animate(
+    [
+      { transform:"scale(1)"   },
+      { transform:"scale(1.15)" },
+      { transform:"scale(1)"   }
+    ],
+    { duration:260, easing:"ease-out" }
+  );
+
+  setTimeout(() => {
+    // ② B にもチャンスがありそうに見せる
+    el.textContent = nameB;
+    el.animate(
+      [
+        { transform:"scale(1)"   },
+        { transform:"scale(1.12)" },
+        { transform:"scale(1)"   }
+      ],
+      { duration:260, easing:"ease-out" }
+    );
+    setTimeout(done, 270);
+  }, 270);
+}
+
+/* ★直球パターンの決定演出（軽い演出をここに集約） */
+function playNormalFinish(el, selIdx){
+  const selected = currentList[selIdx];
+
+  el.textContent = selected;
+  el.animate(
+    [
+      { transform:"scale(1)"   },
+      { transform:"scale(1.2)" },
+      { transform:"scale(1)"   }
+    ],
+    { duration:300, easing:"ease-out" }
+  );
+
+  setTimeout(() => {
+    finishSelection(selIdx, "normal");
+  }, 310);
+}
+
+/* ★B が A を弾き飛ばして勝つパターン（20%） */
+function playAttackFinish(el, prevIdx, finalIdx){
+  const nameA = currentList[prevIdx];    // ほぼ当たりだった前の人
+  const nameB = currentList[finalIdx];   // 本当の当たり（次の人）
+
+  // 小競り合いっぽく A がちょっと粘る
+  el.textContent = nameA;
+  el.animate(
+    [
+      { transform:"translateX(0)"   },
+      { transform:"translateX(-10px)" },
+      { transform:"translateX(0)"   }
+    ],
+    { duration:220, easing:"ease-out" }
+  );
+
+  setTimeout(() => {
+    // B が横から突撃してくる
+    el.textContent = nameB;
+    el.animate(
+      [
+        { transform:"translateX(-80px)", opacity:0 },
+        { transform:"translateX(0)",     opacity:1 }
+      ],
+      { duration:230, easing:"ease-out" }
+    );
+
+    setTimeout(() => {
+      // A が画面の外に吹っ飛ぶ演出
+      el.textContent = nameA;
+      el.animate(
+        [
+          { transform:"translateX(0)",   opacity:1 },
+          { transform:"translateX(80px)", opacity:0 }
+        ],
+        { duration:220, easing:"ease-in" }
+      );
+
+      setTimeout(() => {
+        // 最後に B がドーンと勝者ポジション
+        el.textContent = nameB;
+        el.animate(
+          [
+            { transform:"scale(1)"   },
+            { transform:"scale(1.25)" },
+            { transform:"scale(1)"   }
+          ],
+          { duration:260, easing:"ease-out" }
+        );
+        setTimeout(() => {
+          finishSelection(finalIdx, "special");
+        }, 270);
+      }, 230);
+    }, 240);
+  }, 230);
+}
+
+/* ★B が攻めてくるが A がはじき返して勝つパターン（10%） */
+function playCounterFinish(el, prevIdx, finalIdx){
+  const nameA = currentList[prevIdx];    // 勝者（前の人）
+  const nameB = currentList[finalIdx];   // 攻めてくる次の人
+
+  // まず A が構える
+  el.textContent = nameA;
+  el.animate(
+    [
+      { transform:"translateX(0)"   },
+      { transform:"translateX(10px)" },
+      { transform:"translateX(0)"   }
+    ],
+    { duration:220, easing:"ease-out" }
+  );
+
+  setTimeout(() => {
+    // B が右側から突撃
+    el.textContent = nameB;
+    el.animate(
+      [
+        { transform:"translateX(80px)", opacity:0 },
+        { transform:"translateX(0)",    opacity:1 }
+      ],
+      { duration:230, easing:"ease-out" }
+    );
+
+    setTimeout(() => {
+      // A が反撃して B を吹っ飛ばす
+      el.textContent = nameB;
+      el.animate(
+        [
+          { transform:"translateX(0)",    opacity:1 },
+          { transform:"translateX(-80px)", opacity:0 }
+        ],
+        { duration:220, easing:"ease-in" }
+      );
+
+      setTimeout(() => {
+        // A がドヤッと中央に残る
+        el.textContent = nameA;
+        el.animate(
+          [
+            { transform:"scale(1)"   },
+            { transform:"scale(1.25)" },
+            { transform:"scale(1)"   }
+          ],
+          { duration:260, easing:"ease-out" }
+        );
+        setTimeout(() => {
+          finishSelection(prevIdx, "special");
+        }, 270);
+      }, 230);
+    }, 240);
+  }, 230);
+}
+
+/* ★確定後の共通処理（履歴、音止め、軽い演出など） */
+function finishSelection(selIdx, mode){
+  const rouletteEl = document.getElementById("roulette");
+  const historyEl  = document.getElementById("history");
+
+  const selected = currentList[selIdx] || rouletteEl.textContent;
+
+  rouletteEl.textContent = selected;
+  historyEl.innerHTML += `<li>${selected}</li>`;
+
+  if (!allowDuplicates && currentList[selIdx] !== undefined) {
+    currentList.splice(selIdx, 1);
+  }
+
+  currentIndex = 0;
+  spinning = false;
+
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  // 毎回かかる基本ハイライト
+  rouletteEl.classList.add("highlight");
+  rollCount++;
+
+  // 今までの軽い演出は「直球」のときだけ
+  if (mode === "normal" && rollCount % 5 === 0) {
+    applySpecialEffect(rouletteEl);
+  }
+
+  setTimeout(() => {
+    rouletteEl.classList.remove("highlight");
+  }, 1000);
+}
+
+/* 追加のちょっとした演出（直球のときだけ使う） */
 function applySpecialEffect(el){
   const effect = ["bounce","explode","burn"][Math.floor(Math.random()*3)];
 
