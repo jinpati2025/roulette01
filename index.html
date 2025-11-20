@@ -54,8 +54,9 @@ let rollCount = 0;
 // ★モード設定
 // "attack"  : 毎回「弾き飛ばす」だけ（テスト用）
 // "counter" : 毎回「はじき返す」だけ（テスト用）
+// "straight": 毎回「直球」         （テスト用）
 // "random"  : 通常運用（直球70％・弾き飛ばす20％・はじき返す10％）
-const TEST_MODE = "random";
+const TEST_MODE = "random";   // 本番はここを "random" にしておく
 
 const isGitHub = location.hostname.includes("github.io");
 const dataUrl =
@@ -138,15 +139,12 @@ function startRoulette(){
     // ★最終的に当たる位置をランダムに決める
     const finalIndex = Math.floor(Math.random() * currentList.length);
 
-    const duration   = audio.duration;
-    const totalSteps = 38;
-
-    // ★回転時間（さらに約2秒短く）
-    //   以前: duration - 1 → 今回: duration - 3（最低 1.0 秒）
-    const spinTime     = Math.max(duration - 3, 1.0);
+    const totalSteps = 34;  // ちょっと減らして全体を短く
+    // ★回転時間：かなり短め（約1秒ちょい）
+    const spinTime     = 1.0; // 秒固定にして、演出へ早めに入る
     const baseInterval = (spinTime * 1000) / (totalSteps + 2);
 
-    audio.play();
+    if (audio) audio.play();
 
     let spins = 0;
 
@@ -155,7 +153,7 @@ function startRoulette(){
         // 回転終了 → 結果演出へ
         setTimeout(() => {
           runResultSequence(finalIndex);
-        }, 150);
+        }, 120);
         return;
       }
 
@@ -197,8 +195,12 @@ function runResultSequence(finalIndex){
   // モード決定
   let mode = "normal";
 
-  if (TEST_MODE === "attack" || TEST_MODE === "counter") {
-    mode = TEST_MODE;
+  if (TEST_MODE === "attack" || TEST_MODE === "counter" || TEST_MODE === "straight") {
+    if (TEST_MODE === "straight") {
+      mode = "normal";
+    } else {
+      mode = TEST_MODE;
+    }
   } else {
     // random モード
     if (len >= 2) {
@@ -241,7 +243,7 @@ function playIntro(el, nameA, nameB, done){
       { transform:"scale(1.25)" },
       { transform:"scale(1)"   }
     ],
-    { duration:320, easing:"ease-out" }
+    { duration:280, easing:"ease-out" }
   );
 
   setTimeout(() => {
@@ -253,10 +255,10 @@ function playIntro(el, nameA, nameB, done){
         { transform:"scale(1.2)" },
         { transform:"scale(1)"   }
       ],
-      { duration:320, easing:"ease-out" }
+      { duration:280, easing:"ease-out" }
     );
-    setTimeout(done, 330);
-  }, 330);
+    setTimeout(done, 290);
+  }, 290);
 }
 
 /* ★直球パターンの決定演出（軽い演出をここに集約） */
@@ -270,12 +272,12 @@ function playNormalFinish(el, selIdx){
       { transform:"scale(1.2)" },
       { transform:"scale(1)"   }
     ],
-    { duration:260, easing:"ease-out" }
+    { duration:240, easing:"ease-out" }
   );
 
   setTimeout(() => {
     finishSelection(selIdx, "normal");
-  }, 270);
+  }, 250);
 }
 
 /* ★B が A を弾き飛ばして勝つパターン
@@ -293,16 +295,16 @@ function playAttackFinish(el, prevIdx, finalIdx){
       return;
     }
 
-    // ★B がバネのようにタメて突進（横幅ちょっと広め）
+    // ★B がバネのようにタメて突進（横幅広め）
     el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(-100px) scale(0.9)",  opacity:0.7 }, // タメ
+        { transform:"translateX(-110px) scale(0.9)",  opacity:0.7 }, // タメ
         { transform:"translateX(   0px) scale(1.18)", opacity:1.0 }, // 突進
-        { transform:"translateX(  30px) scale(0.96)", opacity:1.0 }, // 押し込み
+        { transform:"translateX(  35px) scale(0.96)", opacity:1.0 }, // 押し込み
         { transform:"translateX(   0px) scale(1.0)",  opacity:1.0 }  // 戻る
       ],
-      { duration:420, easing:"ease-in-out" }
+      { duration:380, easing:"ease-in-out" }
     );
 
     setTimeout(() => {
@@ -310,17 +312,17 @@ function playAttackFinish(el, prevIdx, finalIdx){
       el.textContent = nameA;
       el.animate(
         [
-          { transform:"translateX( 15px) scale(1.0)"  },
-          { transform:"translateX( 55px) scale(0.95)" },
           { transform:"translateX( 20px) scale(1.0)"  },
+          { transform:"translateX( 70px) scale(0.95)" },
+          { transform:"translateX( 25px) scale(1.0)"  },
           { transform:"translateX(  0px) scale(1.0)"  }
         ],
-        { duration:360, easing:"ease-in-out" }
+        { duration:340, easing:"ease-in-out" }
       );
 
       round++;
-      setTimeout(clash, 380);
-    }, 430);
+      setTimeout(clash, 350);
+    }, 390);
   };
 
   clash();
@@ -331,23 +333,23 @@ function playAttackFinish(el, prevIdx, finalIdx){
     el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(-140px) scale(0.9)",  opacity:0.6 },
+        { transform:"translateX(-150px) scale(0.9)",   opacity:0.6 },
         { transform:"translateX(    0px) scale(1.25)", opacity:1.0 },
-        { transform:"translateX(  60px) scale(1.05)",  opacity:1.0 },
-        { transform:"translateX(   0px) scale(1.0)",   opacity:1.0 }
+        { transform:"translateX(  70px) scale(1.05)",  opacity:1.0 },
+        { transform:"translateX(    0px) scale(1.0)",  opacity:1.0 }
       ],
-      { duration:480, easing:"ease-out" }
+      { duration:420, easing:"ease-out" }
     );
 
     setTimeout(() => {
-      // A が右にクルクル吹っ飛ぶ（横 560px くらい）
+      // A が右にクルクル吹っ飛ぶ（かなり外まで）
       el.textContent = nameA;
       el.animate(
         [
           { transform:"translateX(0)        rotate(0deg)      scale(1.0)", opacity:1 },
-          { transform:"translateX(560px)    rotate(1080deg)   scale(0.3)",  opacity:0 }
+          { transform:"translateX(620px)    rotate(1080deg)   scale(0.3)",  opacity:0 }
         ],
-        { duration:800, easing:"ease-in" }
+        { duration:750, easing:"ease-in" }
       );
 
       setTimeout(() => {
@@ -358,14 +360,14 @@ function playAttackFinish(el, prevIdx, finalIdx){
             { transform:"translateX(-90px) scale(1.1)", opacity:0 },
             { transform:"translateX(  0px) scale(1.0)", opacity:1 }
           ],
-          { duration:480, easing:"ease-out" }
+          { duration:420, easing:"ease-out" }
         );
 
         setTimeout(() => {
           finishSelection(finalIdx, "special");
-        }, 500);
-      }, 820);
-    }, 500);
+        }, 430);
+      }, 770);
+    }, 440);
   }
 }
 
@@ -388,12 +390,12 @@ function playCounterFinish(el, prevIdx, finalIdx){
     el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(100px)  scale(0.9)",  opacity:0.7 },
+        { transform:"translateX(110px)  scale(0.9)",  opacity:0.7 },
         { transform:"translateX(  0px)  scale(1.18)", opacity:1.0 },
-        { transform:"translateX(-30px)  scale(0.96)", opacity:1.0 },
+        { transform:"translateX(-35px)  scale(0.96)", opacity:1.0 },
         { transform:"translateX(  0px)  scale(1.0)",  opacity:1.0 }
       ],
-      { duration:420, easing:"ease-in-out" }
+      { duration:380, easing:"ease-in-out" }
     );
 
     setTimeout(() => {
@@ -401,17 +403,17 @@ function playCounterFinish(el, prevIdx, finalIdx){
       el.textContent = nameA;
       el.animate(
         [
-          { transform:"translateX(-15px) scale(1.0)"  },
-          { transform:"translateX(-55px) scale(0.95)" },
           { transform:"translateX(-20px) scale(1.0)"  },
+          { transform:"translateX(-70px) scale(0.95)" },
+          { transform:"translateX(-25px) scale(1.0)"  },
           { transform:"translateX(  0px) scale(1.0)"  }
         ],
-        { duration:360, easing:"ease-in-out" }
+        { duration:340, easing:"ease-in-out" }
       );
 
       round++;
-      setTimeout(clash, 380);
-    }, 430);
+      setTimeout(clash, 350);
+    }, 390);
   };
 
   clash();
@@ -422,23 +424,23 @@ function playCounterFinish(el, prevIdx, finalIdx){
     el.textContent = nameA;
     el.animate(
       [
-        { transform:"translateX(-140px) scale(0.9)",  opacity:0.6 },
-        { transform:"translateX(   0px) scale(1.25)", opacity:1.0 },
-        { transform:"translateX(-60px) scale(1.05)",  opacity:1.0 },
-        { transform:"translateX(   0px) scale(1.0)",  opacity:1.0 }
+        { transform:"translateX(-150px) scale(0.9)",   opacity:0.6 },
+        { transform:"translateX(    0px) scale(1.25)", opacity:1.0 },
+        { transform:"translateX(-70px) scale(1.05)",   opacity:1.0 },
+        { transform:"translateX(    0px) scale(1.0)",  opacity:1.0 }
       ],
-      { duration:480, easing:"ease-out" }
+      { duration:420, easing:"ease-out" }
     );
 
     setTimeout(() => {
-      // B が左にクルクル吹っ飛ぶ（横 560px くらい）
+      // B が左にクルクル吹っ飛ぶ（弾き飛ばすと反対側）
       el.textContent = nameB;
       el.animate(
         [
-          { transform:"translateX(0)        rotate(0deg)       scale(1.0)", opacity:1 },
-          { transform:"translateX(-560px)   rotate(-1080deg)   scale(0.3)",  opacity:0 }
+          { transform:"translateX(0)         rotate(0deg)       scale(1.0)", opacity:1 },
+          { transform:"translateX(-620px)    rotate(-1080deg)   scale(0.3)",  opacity:0 }
         ],
-        { duration:800, easing:"ease-in" }
+        { duration:750, easing:"ease-in" }
       );
 
       setTimeout(() => {
@@ -449,14 +451,14 @@ function playCounterFinish(el, prevIdx, finalIdx){
             { transform:"translateX(90px) scale(1.1)", opacity:0 },
             { transform:"translateX( 0px) scale(1.0)", opacity:1 }
           ],
-          { duration:480, easing:"ease-out" }
+          { duration:420, easing:"ease-out" }
         );
 
         setTimeout(() => {
           finishSelection(prevIdx, "special");
-        }, 500);
-      }, 820);
-    }, 500);
+        }, 430);
+      }, 770);
+    }, 440);
   }
 }
 
