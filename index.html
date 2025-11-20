@@ -55,7 +55,7 @@ let rollCount = 0;
 // "attack"  : 毎回「弾き飛ばす」
 // "counter" : 毎回「はじき返す」
 // "random"  : 通常運用（直球70％・弾き飛ばす20％・はじき返す10％）
-const TEST_MODE = "attack";
+const TEST_MODE = "attack";  // 落ち着いたら "random" に変えてOK
 
 const isGitHub = location.hostname.includes("github.io");
 const dataUrl =
@@ -277,118 +277,186 @@ function playNormalFinish(el, selIdx){
   }, 310);
 }
 
-/* ★B が A を弾き飛ばして勝つパターン（シンプル版） */
+/* ★B が A を弾き飛ばして勝つパターン
+   ばねでタメて 2回小競り合い → 3回目で A が右にクルクル吹っ飛ぶ */
 function playAttackFinish(el, prevIdx, finalIdx){
-  const nameA = currentList[prevIdx];    // ほぼ当たりだった前の人
-  const nameB = currentList[finalIdx];   // 本当の当たり（次の人）
+  const nameA = currentList[prevIdx];    // ほぼ当たりだった前の人（負け役）
+  const nameB = currentList[finalIdx];   // 本当の当たり（勝ち役）
 
-  // ① A が決まりかけて光る
-  el.textContent = nameA;
-  el.animate(
-    [
-      { transform:"scale(1)"   },
-      { transform:"scale(1.25)"},
-      { transform:"scale(1)"   }
-    ],
-    { duration:350, easing:"ease-out" }
-  );
+  let round = 0;
 
-  setTimeout(() => {
-    // ② B が左から乱入してくる
+  const clash = () => {
+    if (round >= 2) {
+      // 3回目は決着に入る
+      finalHit();
+      return;
+    }
+
+    // ★B がバネのようにタメて突進
     el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(-60px)", opacity:0.2 },
-        { transform:"translateX(0)",     opacity:1   }
+        { transform:"translateX(-80px) scale(0.9)",  opacity:0.7 }, // ぐっとタメ
+        { transform:"translateX(  0px) scale(1.15)", opacity:1.0 }, // 突進
+        { transform:"translateX( 20px) scale(0.95)", opacity:1.0 }, // 押し込み
+        { transform:"translateX(  0px) scale(1.0)",  opacity:1.0 }  // 戻る
       ],
-      { duration:350, easing:"ease-out" }
+      { duration:420, easing:"ease-in-out" }
     );
 
     setTimeout(() => {
-      // ③ A が右にクルクル飛んでいく
+      // ★A がよろけながら耐える
       el.textContent = nameA;
       el.animate(
         [
-          { transform:"translateX(0) rotate(0deg)   scale(1)",   opacity:1 },
-          { transform:"translateX(360px) rotate(720deg) scale(0.4)", opacity:0 }
+          { transform:"translateX(10px)  scale(1.0)"  },
+          { transform:"translateX(40px)  scale(0.95)" },
+          { transform:"translateX(15px)  scale(1.0)"  },
+          { transform:"translateX( 0px)  scale(1.0)"  }
         ],
-        { duration:650, easing:"ease-in" }
+        { duration:360, easing:"ease-in-out" }
+      );
+
+      round++;
+      setTimeout(clash, 380);
+    }, 430);
+  };
+
+  clash();
+
+  // ★3回目：本気でぶつかって A が吹っ飛ぶ
+  function finalHit(){
+    // B が大きくタメて突進
+    el.textContent = nameB;
+    el.animate(
+      [
+        { transform:"translateX(-120px) scale(0.9)",  opacity:0.6 },
+        { transform:"translateX(   0px) scale(1.25)", opacity:1.0 },
+        { transform:"translateX( 40px)  scale(1.05)", opacity:1.0 },
+        { transform:"translateX(  0px)  scale(1.0)",  opacity:1.0 }
+      ],
+      { duration:480, easing:"ease-out" }
+    );
+
+    setTimeout(() => {
+      // A が右にクルクル吹っ飛ぶ
+      el.textContent = nameA;
+      el.animate(
+        [
+          { transform:"translateX(0)      rotate(0deg)      scale(1.0)", opacity:1 },
+          { transform:"translateX(460px)  rotate(1080deg)  scale(0.3)",  opacity:0 }
+        ],
+        { duration:800, easing:"ease-in" }
       );
 
       setTimeout(() => {
-        // ④ B が中央にドンと残る
+        // B が中央にドーン
         el.textContent = nameB;
         el.animate(
           [
-            { transform:"translateX(-80px) scale(1.1)", opacity:0 },
-            { transform:"translateX(0)     scale(1.0)", opacity:1 }
+            { transform:"translateX(-70px) scale(1.1)", opacity:0 },
+            { transform:"translateX(  0px) scale(1.0)", opacity:1 }
           ],
-          { duration:450, easing:"ease-out" }
+          { duration:480, easing:"ease-out" }
         );
 
         setTimeout(() => {
           finishSelection(finalIdx, "special");
-        }, 460);
-      }, 660);
-    }, 380);
-  }, 380);
+        }, 500);
+      }, 820);
+    }, 500);
+  }
 }
 
-/* ★B が攻めてくるが A がはじき返すパターン（シンプル版） */
+/* ★B が攻めてくるが A がはじき返して勝つパターン
+   ばねでタメて 2回小競り合い → 3回目で B が左にクルクル吹っ飛ぶ */
 function playCounterFinish(el, prevIdx, finalIdx){
   const nameA = currentList[prevIdx];    // 勝者（前の人）
-  const nameB = currentList[finalIdx];   // 攻めてくる次の人
+  const nameB = currentList[finalIdx];   // 攻めてくる次の人（負け役）
 
-  // ① B が右から乱入してきて当たりそうに見える
-  el.textContent = nameB;
-  el.animate(
-    [
-      { transform:"translateX(60px) scale(1)", opacity:0.2 },
-      { transform:"translateX(0)    scale(1.2)", opacity:1   },
-      { transform:"translateX(0)    scale(1.0)", opacity:1   }
-    ],
-    { duration:550, easing:"ease-out" }
-  );
+  let round = 0;
 
-  setTimeout(() => {
-    // ② A が登場して押し返す感じ
-    el.textContent = nameA;
+  const clash = () => {
+    if (round >= 2) {
+      // 3回目で決着
+      finalHit();
+      return;
+    }
+
+    // ★B が右からバネのように突進
+    el.textContent = nameB;
     el.animate(
       [
-        { transform:"translateX(-40px)", opacity:0.2 },
-        { transform:"translateX(0)",     opacity:1   }
+        { transform:"translateX(80px)  scale(0.9)",  opacity:0.7 },
+        { transform:"translateX( 0px)  scale(1.15)", opacity:1.0 },
+        { transform:"translateX(-20px) scale(0.95)", opacity:1.0 },
+        { transform:"translateX( 0px)  scale(1.0)",  opacity:1.0 }
       ],
-      { duration:400, easing:"ease-out" }
+      { duration:420, easing:"ease-in-out" }
     );
 
     setTimeout(() => {
-      // ③ B が左にクルクル飛んでいく
+      // ★A がぐっと踏ん張る
+      el.textContent = nameA;
+      el.animate(
+        [
+          { transform:"translateX(-10px) scale(1.0)"  },
+          { transform:"translateX(-40px) scale(0.95)" },
+          { transform:"translateX(-15px) scale(1.0)"  },
+          { transform:"translateX(  0px) scale(1.0)"  }
+        ],
+        { duration:360, easing:"ease-in-out" }
+      );
+
+      round++;
+      setTimeout(clash, 380);
+    }, 430);
+  };
+
+  clash();
+
+  // ★3回目：A のカウンターで B が吹っ飛ぶ
+  function finalHit(){
+    // A が左からカウンター気味に前進
+    el.textContent = nameA;
+    el.animate(
+      [
+        { transform:"translateX(-120px) scale(0.9)",  opacity:0.6 },
+        { transform:"translateX(   0px) scale(1.25)", opacity:1.0 },
+        { transform:"translateX(-40px) scale(1.05)",  opacity:1.0 },
+        { transform:"translateX(   0px) scale(1.0)",  opacity:1.0 }
+      ],
+      { duration:480, easing:"ease-out" }
+    );
+
+    setTimeout(() => {
+      // B が左にクルクル吹っ飛ぶ
       el.textContent = nameB;
       el.animate(
         [
-          { transform:"translateX(0) rotate(0deg)      scale(1)",   opacity:1 },
-          { transform:"translateX(-360px) rotate(-720deg) scale(0.4)", opacity:0 }
+          { transform:"translateX(0)       rotate(0deg)       scale(1.0)", opacity:1 },
+          { transform:"translateX(-460px)  rotate(-1080deg)   scale(0.3)", opacity:0 }
         ],
-        { duration:650, easing:"ease-in" }
+        { duration:800, easing:"ease-in" }
       );
 
       setTimeout(() => {
-        // ④ A が中央でドヤッと残る
+        // A が中央にドヤッと残る
         el.textContent = nameA;
         el.animate(
           [
-            { transform:"translateX(80px) scale(1.1)", opacity:0 },
-            { transform:"translateX(0)    scale(1.0)", opacity:1 }
+            { transform:"translateX(70px) scale(1.1)", opacity:0 },
+            { transform:"translateX( 0px) scale(1.0)", opacity:1 }
           ],
-          { duration:450, easing:"ease-out" }
+          { duration:480, easing:"ease-out" }
         );
 
         setTimeout(() => {
           finishSelection(prevIdx, "special");
-        }, 460);
-      }, 660);
-    }, 420);
-  }, 560);
+        }, 500);
+      }, 820);
+    }, 500);
+  }
 }
 
 /* ★確定後の共通処理（履歴、音止め、軽い演出など） */
