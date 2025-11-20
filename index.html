@@ -52,7 +52,7 @@ let audio;
 let rollCount = 0;
 
 // ★テスト用：ここに "attack" / "counter" / "straight" を入れるとその演出だけになる
-// 本番は null のまま（完全ランダム）
+// 本番運用は null のままにしてください
 const FORCE_MODE = null;
 
 const isGitHub = location.hostname.includes("github.io");
@@ -136,9 +136,10 @@ function startRoulette(){
     // ★最終的に当たる位置をランダムに決める
     const finalIndex = Math.floor(Math.random() * currentList.length);
 
-    const totalSteps = 34;  // ちょっと減らして全体を短く
-    // ★回転時間：かなり短め（約1秒ちょい）
-    const spinTime     = 1.0; // 秒固定にして、演出へ早めに入る
+    // ★回転の調整
+    const totalSteps = 40;   // 少し多めに回す
+    const spinTime   = 1.8;  // 約1.8秒回転
+
     const baseInterval = (spinTime * 1000) / (totalSteps + 2);
 
     if (audio) audio.play();
@@ -147,10 +148,10 @@ function startRoulette(){
 
     const step = () => {
       if (spins >= totalSteps) {
-        // 回転終了 → 結果演出へ
+        // 回転終了 → 少し「間」を置いてから結果演出へ
         setTimeout(() => {
           runResultSequence(finalIndex);
-        }, 120);
+        }, 250);
         return;
       }
 
@@ -161,10 +162,11 @@ function startRoulette(){
       spins++;
 
       let delay = baseInterval;
-      if (spins > totalSteps * 0.7) {
-        delay *= 1.5;
+      // 減速はややゆるめ
+      if (spins > totalSteps * 0.8) {
+        delay *= 1.4;
       } else if (spins > totalSteps * 0.5) {
-        delay *= 1.25;
+        delay *= 1.15;
       }
 
       setTimeout(step, delay);
